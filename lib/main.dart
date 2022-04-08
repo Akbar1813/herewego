@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:herewego/pages/detail_page.dart';
 import 'package:herewego/pages/home_page.dart';
 import 'package:herewego/pages/signIn_page.dart';
 import 'package:herewego/pages/signUp_page.dart';
+import 'package:herewego/services/pref_service.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +16,21 @@ void main() async{
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
+  Widget _startPage(){
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (BuildContext context, snapshot) {
+        if(snapshot.hasData){
+          Prefs.saveUserId(snapshot.data!.uid);
+          return HomePage();
+        }else {
+          Prefs.removeUserId();
+          return SignInPage();
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,11 +39,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
       ),
-      home: const SignInPage(),
+      home: _startPage(),
       routes: {
         SignInPage.Id: (context) => SignInPage(),
         HomePage.Id: (context) => HomePage(),
-        SignUpPage.Id: (context) => SignUpPage()
+        SignUpPage.Id: (context) => SignUpPage(),
+        DetailPage.Id: (context) => DetailPage()
       },
     );
   }
